@@ -1,0 +1,2 @@
+# gorocket
+Relativistic rocket equation
