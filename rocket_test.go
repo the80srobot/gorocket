@@ -19,6 +19,8 @@ func approximately(x, y float64) bool {
 	return x > y*(1-tolerance) && x < y*(1+tolerance)
 }
 
+// Tests that the effects of proper acceleration match up to the hyperbolic solution
+// over the same (coordinate) time span.
 func TestProperAcceleration(t *testing.T) {
 	for _, tc := range knownValues {
 		w := tc.a * tc.t
