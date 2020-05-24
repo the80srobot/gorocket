@@ -19,6 +19,28 @@ func approximately(x, y float64) bool {
 	return x > y*(1-tolerance) && x < y*(1+tolerance)
 }
 
+func TestRocket(t *testing.T) {
+	const steps = 1000000
+	for _, tc := range knownValues {
+		var r Rocket
+		for i := 0; i < steps; i++ {
+			r.Accelerate(Vector3{tc.a, 0, 0}, tc.t/float64(steps))
+		}
+
+		if v := r.V(); !approximately(v, tc.v) {
+			t.Errorf(
+				"accelerating rocket a=%f g t=%f y, v=%f c (wanted %f c)",
+				tc.a/G, tc.t/Year, v/C, tc.v/C)
+		}
+
+		if !approximately(r.Tau, tc.tau) {
+			t.Errorf(
+				"accelerating rocket a=%f g t=%f y, tau=%f y (wanted %f y)",
+				tc.a/G, tc.t/Year, r.Tau/Year, tc.tau/Year)
+		}
+	}
+}
+
 // Tests that the effects of proper acceleration match up to the hyperbolic solution
 // over the same (coordinate) time span.
 func TestProperAcceleration(t *testing.T) {

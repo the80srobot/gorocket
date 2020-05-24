@@ -31,13 +31,14 @@ The notation used throughout the package is standard, but adapted for ASCII.
 
 Quantities:
 
- a  // acceleration (both scalar and vector)
+ a  // acceleration, proper frame (both scalar and vector)
  v  // coordinate velocity (both scalar and vector)
  w  // proper velocity (both scalar and vector)
  t  // coordinate (observer) time
  tau  // proper (shipboard) time
  d  // distance
  lorentz  // the Lorentz factor (gamma)
+ dt  // delta time
 
 Other:
 
@@ -68,6 +69,46 @@ const (
 	Year      = float64(3600 * 24 * 365)
 	G         = 9.8
 )
+
+// Rocket is a numerical model for a rocket at relativistic speeds.
+//
+// Each physics step, call Accelerate, then read out the updated parameters.
+// See Accelerate for notes about precision (loss thereof) and other notes.
+//
+// To simulate time's passage on a physics rame with no acceleration, call
+// Accelerate with a zero Vector3.
+type Rocket struct {
+	// Proper velocity (can exceed C).
+	W Vector3
+	// Coordinate (Earth/observer) and proper (shipboard) time.
+	T, Tau float64
+}
+
+// Accelerate the rocket by applying constant proper acceleration for dt seconds.
+//
+// Acceleration is in the proper frame (as felt by people in the rocket), and
+// dt is in coordinate time.
+//
+// This is the main physics step function for the rocket. It updates the time
+// and velocity. Accelerate over-estimates time dilation, because it computes
+// the Lorentz factor after applying acceleration. Call it with smaller dt
+// to make the effect neglibible.
+func (r *Rocket) Accelerate(a Vector3, dt float64) {
+	r.W.x += a.x * dt
+	r.W.y += a.y * dt
+	r.W.z += a.z * dt
+	r.T += dt
+	r.Tau += dt / r.LorentzFactor()
+}
+
+func (r *Rocket) LorentzFactor() float64 {
+	v := r.V()
+	return 1 / math.Sqrt(1-(v*v)/(C*C))
+}
+
+func (r *Rocket) V() float64 {
+	return CoordinateVelocity(r.W.Magnitude())
+}
 
 func CoordinateTime(d, a float64) float64 {
 	q := d / C
