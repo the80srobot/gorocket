@@ -87,7 +87,9 @@ type Rocket struct {
 // Accelerate the rocket by applying constant proper acceleration for dt seconds.
 //
 // Acceleration is in the proper frame (as felt by people in the rocket), and
-// dt is in coordinate time.
+// dt is in coordinate time. This may seem counterintuitive - proper
+// acceleration is related to coordinate acceleration by the cube of the lorentz
+// factor. See also AccelerateOnProperTime.
 //
 // This is the main physics step function for the rocket. It updates the time
 // and velocity. Accelerate over-estimates time dilation, because it computes
@@ -99,6 +101,25 @@ func (r *Rocket) Accelerate(a Vector3, dt float64) {
 	r.W.z += a.z * dt
 	r.T += dt
 	r.Tau += dt / r.LorentzFactor()
+}
+
+// AccelerateOnProperTime is an alternative step function to Accelerate.
+//
+// The change in proper velocity of an accelerating observer is the integral of
+// the proper acceleration (as experienced by the observer) over the coordinate
+// time. This may seem counter intuitive. Among other things, it means that the
+// change in proper velocity depends on the current velocity, everything else
+// being constant.
+//
+// This function can be helpful for simulating physics using the time
+// experienced by an observer inside the accelerating (proper) frame.
+func (r *Rocket) AccelerateOnProperTime(a Vector3, dtau float64) {
+	dt := r.LorentzFactor() * dtau
+	r.W.x += a.x * dt
+	r.W.y += a.y * dt
+	r.W.z += a.z * dt
+	r.T += dt
+	r.Tau += dtau
 }
 
 func (r *Rocket) LorentzFactor() float64 {

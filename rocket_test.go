@@ -19,8 +19,8 @@ func approximately(x, y float64) bool {
 	return x > y*(1-tolerance) && x < y*(1+tolerance)
 }
 
-func TestRocket(t *testing.T) {
-	const steps = 1000000
+func TestRocketAccelerate(t *testing.T) {
+	const steps = 1e6
 	for _, tc := range knownValues {
 		var r Rocket
 		for i := 0; i < steps; i++ {
@@ -29,14 +29,48 @@ func TestRocket(t *testing.T) {
 
 		if v := r.V(); !approximately(v, tc.v) {
 			t.Errorf(
-				"accelerating rocket a=%f g t=%f y, v=%f c (wanted %f c)",
+				"accelerating rocket (coordinate) a=%f g t=%f y, v=%f c (wanted %f c)",
 				tc.a/G, tc.t/Year, v/C, tc.v/C)
 		}
 
 		if !approximately(r.Tau, tc.tau) {
 			t.Errorf(
-				"accelerating rocket a=%f g t=%f y, tau=%f y (wanted %f y)",
+				"accelerating rocket (coordinate) a=%f g t=%f y, tau=%f y (wanted %f y)",
 				tc.a/G, tc.t/Year, r.Tau/Year, tc.tau/Year)
+		}
+
+		if !approximately(r.T, tc.t) {
+			t.Errorf(
+				"accelerating rocket (proper) a=%f g tau=%f y, t=%f y (wanted %f y)",
+				tc.a/G, tc.tau/Year, r.T/Year, tc.t/Year)
+		}
+	}
+}
+
+func TestRocketAccelerateOnProperTime(t *testing.T) {
+	const steps = 1e6
+	for _, tc := range knownValues {
+		var r Rocket
+		for i := 0; i < steps; i++ {
+			r.AccelerateOnProperTime(Vector3{tc.a, 0, 0}, tc.tau/float64(steps))
+		}
+
+		if v := r.V(); !approximately(v, tc.v) {
+			t.Errorf(
+				"accelerating rocket (proper) a=%f g t=%f y, v=%f c (wanted %f c)",
+				tc.a/G, tc.t/Year, v/C, tc.v/C)
+		}
+
+		if !approximately(r.Tau, tc.tau) {
+			t.Errorf(
+				"accelerating rocket (proper) a=%f g t=%f y, tau=%f y (wanted %f y)",
+				tc.a/G, tc.t/Year, r.Tau/Year, tc.tau/Year)
+		}
+
+		if !approximately(r.T, tc.t) {
+			t.Errorf(
+				"accelerating rocket (proper) a=%f g tau=%f y, t=%f y (wanted %f y)",
+				tc.a/G, tc.tau/Year, r.T/Year, tc.t/Year)
 		}
 	}
 }
